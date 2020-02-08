@@ -1,0 +1,74 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# Vagrant virtual environments for SQL Server 2017 on Ubuntu Linux
+
+Vagrant.configure(2) do |config|
+
+	config.vm.define "db" do |db|
+		db.vm.box_check_update = false
+
+	  	db.vm.provider "virtualbox" do |vb, override|
+		    vb.name = "vagrant-mssql"
+		    vb.memory = "2048"
+		    override.vm.box = "bento/ubuntu-16.04"
+		    override.vm.network "private_network", ip: "192.168.5.5"
+		    override.vm.network :forwarded_port, host: 2433, guest: 1433  # SQLServer
+		  end
+
+		if Vagrant.has_plugin? "vagrant-vbguest"
+			db.vbguest.no_install  = true
+			db.vbguest.auto_update = false
+			db.vbguest.no_remote   = true
+		end
+
+		db.vm.provision "ansible_local" do |ansible|
+			ansible.become = true
+			ansible.verbose = "v"
+		    ansible.playbook = "./MSSQL/playbook.yml"
+		end
+	end
+	
+	config.vm.define "web" do |web|
+		
+	  # Box details
+	  web.vm.box = 'ubuntu/xenial64'
+	  
+	  web.ssh.forward_agent = true
+
+	  web.vm.hostname = "dotnetcore.vm"
+	  web.vm.synced_folder "./NETCORE/src", "/home/vagrant/src"
+	  web.vm.provider "virtualbox" do |vb|
+	    vb.memory = "1024"
+	  end
+	  
+	  web.ssh.shell = %{bash -c 'BASH_ENV=/etc/profile exec bash'}
+
+	  if Vagrant.has_plugin? "vagrant-vbguest"
+		web.vbguest.no_install  = true
+		web.vbguest.auto_update = false
+		web.vbguest.no_remote   = true
+	  end
+
+
+	  # Network
+	  web.vm.network :forwarded_port, guest: 80, host: 8080
+	  web.vm.network :forwarded_port, guest: 5000, host: 8079
+	  web.vm.network :forwarded_port, guest: 5001, host: 8081
+	  web.vm.network :private_network, ip: "192.168.5.4"
+
+
+	  web.vm.provision "ansible_local" do |ansible|
+		ansible.become = true
+		ansible.verbose = "v"
+		ansible.playbook = "./NETCORE/playbook.yml"
+	  end
+	web.vm.provision "ansible_local", run: "always" do |ansible|
+		ansible.become = true
+		ansible.verbose = "v"
+		ansible.playbook = "./NETCORE/playbook-run.yml"
+	  end
+
+	end
+end
+

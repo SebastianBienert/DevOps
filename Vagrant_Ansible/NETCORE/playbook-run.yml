@@ -1,0 +1,16 @@
+- name: Configure DOTNET
+  hosts: all
+  become: True
+  tasks:
+  - name: Builds dotnet application
+    shell:
+      cmd: dotnet build
+      chdir: /home/vagrant/src
+  - name: Entity framework update database
+    shell:
+      cmd: dotnet ef database update
+      chdir: /home/vagrant/src/EducationalProgram
+  - name: Run dotnet application
+    shell:
+      cmd: dotnet run &
+      chdir: /home/vagrant/src/EducationalProgram

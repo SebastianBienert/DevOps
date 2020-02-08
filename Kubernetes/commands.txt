@@ -1,0 +1,12 @@
+##
+START MINIKUBE:
+minikube start --vm-driver=virtualbox
+
+GET DO MINIKUBE DOCKER DEAMON
+@FOR /f "tokens=* delims=^L" %i IN ('minikube docker-env') DO %i
+
+RUN PODS
+kubectl apply -f db-service.yaml,web-service.yaml,db-deployment.yaml,web-deployment.yaml
+
+CHECK PODS, DEPLOYMENTS, SERVICES
+kubectl get deployment,svc,pods

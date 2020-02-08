@@ -1,0 +1,28 @@
+version: "3.4"
+
+services:
+  web:
+    image: educationalprogram:kube
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+    ports:
+      - "51919:80"
+    expose:
+      - 80
+    depends_on:
+      - db
+
+  db:
+    image: mcr.microsoft.com/mssql/server:2017-CU8-ubuntu
+    hostname: "sqlserver"
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=Password123
+    ports:
+      - "1433:1433"
+    expose:
+      - 1433
